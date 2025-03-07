@@ -1,36 +1,46 @@
 package com.example.rollthedice.ui.theme
 
+import androidx.compose.ui.graphics.Color
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.rollthedice.R
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
-fun DiceRow(dice: List<Int>, onClick: ((Int) -> Unit)?) {
+fun DiceRow(dice: List<Int>, selectedDice: List<Boolean>, onClick: ((Int) -> Unit)?) {
     Row {
-        dice.forEachIndexed { index, value ->  // ✅ Now this works because dice is a List<Int>
-            DiceImage(value, onClick?.let { { onClick(index) } })
+        dice.forEachIndexed { index, value ->
+            DiceImage(
+                value = value,
+                isSelected = selectedDice[index],
+                onClick = onClick?.let { { onClick(index) } }
+            )
         }
     }
 }
 
-
 @Composable
-fun DiceImage(value: Int, onClick: (() -> Unit)?) {
-    Image(
-        painter = painterResource(id = diceDrawable(value)),
-        contentDescription = "Dice $value",
+fun DiceImage(value: Int, isSelected: Boolean, onClick: (() -> Unit)?) {
+    Box(
         modifier = Modifier
             .size(64.dp)
+            .padding(4.dp)
+            .background(if (isSelected) Color.LightGray else Color.Transparent)
             .clickable(enabled = onClick != null) { onClick?.invoke() }
-    )
+    ) {
+        Image(
+            painter = painterResource(id = diceDrawable(value)),
+            contentDescription = "Dice $value",
+            modifier = Modifier.fillMaxSize()
+        )
+    }
 }
+
+
 
 fun diceDrawable(value: Int): Int {
     return when (value) {

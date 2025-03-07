@@ -16,8 +16,12 @@ fun MainMenuScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Button(onClick = { navController.navigate("game") }) {
-            Text("New Game")
+        Button(onClick = { navController.navigate("game/easy") }) {
+            Text("Easy Mode")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { navController.navigate("game/hard") }) {
+            Text("Hard Mode")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = { showDialog = true }) {
@@ -25,11 +29,11 @@ fun MainMenuScreen(navController: NavController) {
         }
     }
 
-
     if (showDialog) {
         showAboutDialog(onDismiss = { showDialog = false })
     }
 }
+
 
 
 @Composable

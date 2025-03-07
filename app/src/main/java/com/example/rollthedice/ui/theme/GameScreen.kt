@@ -11,37 +11,43 @@ import androidx.compose.runtime.collectAsState
 
 
 @Composable
-fun GameScreen(navController: NavController, viewModel: DiceGameViewModel = remember { DiceGameViewModel() }) {
+fun GameScreen(navController: NavController, mode: String) {
+    val viewModel = remember { DiceGameViewModel(mode) } // Pass mode to ViewModel
     val humanDice by viewModel.humanDice.collectAsState()
     val computerDice by viewModel.computerDice.collectAsState()
     val humanScore by viewModel.humanScore.collectAsState()
     val computerScore by viewModel.computerScore.collectAsState()
     val hasThrown by viewModel.hasThrown.collectAsState()
+    val rerollCount by viewModel.rerollCount.collectAsState()
+    val selectedDice by viewModel.selectedDice.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
     ) {
         Text("Target Score: ${viewModel.targetScore}")
+        Text("Mode: ${if (mode == "hard") "Hard Mode" else "Easy Mode"}")
         Text("H: $humanScore / C: $computerScore")
 
-        // Display dice rows
-        DiceRow(humanDice, viewModel::toggleDiceSelection)
-        DiceRow(computerDice, null)
+        DiceRow(humanDice, selectedDice, viewModel::toggleDiceSelection)
+        DiceRow(computerDice, List(5) { false }, null)
 
         Row {
-              Button(onClick = {
-                if (!hasThrown) {
-                    viewModel.throwDice()
-                } else {
-                    viewModel.rerollSelectedDice()
-                }
-            }) {
-                Text(if (!hasThrown) "Throw" else "Reroll")
+            Button(
+                onClick = {
+                    if (!hasThrown) viewModel.throwDice()
+                    else viewModel.rerollSelectedDice()
+                },
+                enabled = !hasThrown || rerollCount < 2
+            ) {
+                Text(if (!hasThrown) "Throw" else "Reroll (${2 - rerollCount})")
             }
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            Button(onClick = { viewModel.scoreTurn() }) {
+            Button(
+                onClick = { viewModel.scoreTurn() },
+                enabled = hasThrown
+            ) {
                 Text("Score")
             }
         }
@@ -54,3 +60,7 @@ fun GameScreen(navController: NavController, viewModel: DiceGameViewModel = reme
         }
     }
 }
+
+
+
+
