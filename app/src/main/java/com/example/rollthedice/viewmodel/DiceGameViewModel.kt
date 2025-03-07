@@ -2,57 +2,61 @@ package com.example.rollthedice.viewmodel
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlin.random.Random
 
 class DiceGameViewModel : ViewModel() {
+    private val _humanDice = MutableStateFlow(List(5) { 1 })
+    val humanDice = _humanDice.asStateFlow()
 
-    // Wrapping dice states in MutableStateFlow
-    private val _humanDice = MutableStateFlow<List<Int>>(List(5) { (1..6).random() })
-    val humanDice: StateFlow<List<Int>> = _humanDice
-
-    private val _computerDice = MutableStateFlow<List<Int>>(List(5) { (1..6).random() })
-    val computerDice: StateFlow<List<Int>> = _computerDice
+    private val _computerDice = MutableStateFlow(List(5) { 1 })
+    val computerDice = _computerDice.asStateFlow()
 
     private val _humanScore = MutableStateFlow(0)
-    val humanScore: StateFlow<Int> = _humanScore
+    val humanScore = _humanScore.asStateFlow()
 
     private val _computerScore = MutableStateFlow(0)
-    val computerScore: StateFlow<Int> = _computerScore
+    val computerScore = _computerScore.asStateFlow()
 
-    var rerolls = 0
-    var targetScore = 101
-    private val selectedDice = mutableSetOf<Int>()
+    private val _selectedDice = MutableStateFlow(List(5) { false })
+    private val _hasThrown = MutableStateFlow(false)
+    val hasThrown = _hasThrown.asStateFlow()
 
-    // Function to toggle dice selection
+    val targetScore = 101
+
     fun toggleDiceSelection(index: Int) {
-        if (index in selectedDice) selectedDice.remove(index) else selectedDice.add(index)
-    }
-
-    // Function to reroll only the selected dice
-    fun rerollSelectedDice() {
-        if (rerolls < 2) {
-            _humanDice.value = _humanDice.value.mapIndexed { index, value ->
-                if (index in selectedDice) value else (1..6).random()
-            }
-            rerolls++
+        _selectedDice.value = _selectedDice.value.toMutableList().also {
+            it[index] = !it[index]
         }
     }
 
-    // Function to score and update total score
+    fun throwDice() {
+        _humanDice.value = List(5) { Random.nextInt(1, 7) }
+        _hasThrown.value = true
+        computerTurn()
+    }
+
+    fun rerollSelectedDice() {
+        _humanDice.value = _humanDice.value.mapIndexed { index, value ->
+            if (_selectedDice.value[index]) value else Random.nextInt(1, 7)
+        }
+    }
+
     fun scoreTurn() {
         _humanScore.value += _humanDice.value.sum()
-        playComputerTurn()
-        rerolls = 0
-        selectedDice.clear()
+        _computerScore.value += _computerDice.value.sum()
+
+        if (_humanScore.value < targetScore && _computerScore.value < targetScore) {
+            resetForNextTurn()
+        }
     }
 
-    // Function for the computer's turn
-    private fun playComputerTurn() {
-        _computerDice.value = List(5) { (1..6).random() }
-        val rerolls = (0..2).random()
-        repeat(rerolls) {
-            _computerDice.value = _computerDice.value.map { if ((0..1).random() == 1) (1..6).random() else it }
-        }
-        _computerScore.value += _computerDice.value.sum()
+    private fun computerTurn() {
+        _computerDice.value = List(5) { Random.nextInt(1, 7) }
+    }
+
+    private fun resetForNextTurn() {
+        _selectedDice.value = List(5) { false }
+        _hasThrown.value = false
     }
 }
