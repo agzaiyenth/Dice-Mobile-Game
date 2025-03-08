@@ -8,11 +8,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.rollthedice.viewmodel.DiceGameViewModel
 import androidx.compose.runtime.collectAsState
-
-
 @Composable
-fun GameScreen(navController: NavController, mode: String) {
-    val viewModel = remember { DiceGameViewModel(mode) } // Pass mode to ViewModel
+fun GameScreen(navController: NavController, mode: String) { // ✅ Mode is passed and fixed
+    val viewModel = remember { DiceGameViewModel(mode) } // ✅ Pass mode to ViewModel
     val humanDice by viewModel.humanDice.collectAsState()
     val computerDice by viewModel.computerDice.collectAsState()
     val humanScore by viewModel.humanScore.collectAsState()
@@ -60,6 +58,9 @@ fun GameScreen(navController: NavController, mode: String) {
         }
     }
 }
+
+
+
 
 
 

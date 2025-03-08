@@ -9,6 +9,7 @@ import androidx.navigation.NavController
 
 @Composable
 fun MainMenuScreen(navController: NavController) {
+    var showModeDialog by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -16,23 +17,30 @@ fun MainMenuScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Button(onClick = { navController.navigate("game/easy") }) {
-            Text("Easy Mode")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { navController.navigate("game/hard") }) {
-            Text("Hard Mode")
+        Button(onClick = { showModeDialog = true }) {
+            Text("Start Game")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = { showDialog = true }) {
             Text("About")
         }
-    }
 
+    }
     if (showDialog) {
         showAboutDialog(onDismiss = { showDialog = false })
     }
+
+    if (showModeDialog) {
+        ModeSelectionDialog(
+            onModeSelected = { mode ->
+                navController.navigate("game/$mode")
+                showModeDialog = false
+            },
+            onDismiss = { showModeDialog = false }
+        )
+    }
 }
+
 
 
 

@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.random.Random
 
-class DiceGameViewModel(private val mode: String) : ViewModel() { // ✅ Accepts mode
+class DiceGameViewModel(private val mode: String) : ViewModel() { // ✅ Mode is passed once
     private val _humanDice = MutableStateFlow(List(5) { 1 })
     val humanDice = _humanDice.asStateFlow()
 
@@ -69,15 +69,17 @@ class DiceGameViewModel(private val mode: String) : ViewModel() { // ✅ Accepts
     }
 
     private fun easyModeStrategy(): List<Int> {
-        return List(5) { Random.nextInt(1, 7) } // Randomly rolls all dice
+        return List(5) { Random.nextInt(1, 7) }
     }
 
     private fun hardModeStrategy(): List<Int> {
         val currentDice = _computerDice.value
-        val diceToReroll = currentDice.map { it < 4 } // Reroll dice with values below 4
+        val shouldPlaySmart = Random.nextBoolean()
 
-        return currentDice.mapIndexed { index, value ->
-            if (diceToReroll[index]) Random.nextInt(4, 7) else value // Keeps high values, rerolls low
+        return if (shouldPlaySmart) {
+            currentDice.map { if (it < 4) Random.nextInt(4, 7) else it }
+        } else {
+            List(5) { Random.nextInt(1, 7) }
         }
     }
 
@@ -89,4 +91,5 @@ class DiceGameViewModel(private val mode: String) : ViewModel() { // ✅ Accepts
         _rerollCount.value = 0
     }
 }
+
 
