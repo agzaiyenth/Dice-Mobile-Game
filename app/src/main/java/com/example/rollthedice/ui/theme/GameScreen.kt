@@ -15,10 +15,17 @@ import com.example.rollthedice.viewmodel.DiceGameViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 @Composable
 fun GameScreen(navController: NavController, mode: String) {
     val viewModel = remember { DiceGameViewModel(mode) }
+    var showResetDice by remember { mutableStateOf(false) }
+    var animatedHumanDice by remember { mutableStateOf(List(5) { Random.nextInt(1, 7) }) }
+    var animatedComputerDice by remember { mutableStateOf(List(5) { Random.nextInt(1, 7) }) }
+    var isFirstThrow by remember { mutableStateOf(true) }
+
     val humanDice by viewModel.humanDice.collectAsState()
     val computerDice by viewModel.computerDice.collectAsState()
     val humanScore by viewModel.humanScore.collectAsState()
@@ -27,10 +34,22 @@ fun GameScreen(navController: NavController, mode: String) {
     val rerollCount by viewModel.rerollCount.collectAsState()
     val selectedDice by viewModel.selectedDice.collectAsState()
 
+    LaunchedEffect(isFirstThrow) {
+        if (isFirstThrow) {
+            repeat(10) {
+                animatedHumanDice = List(5) { Random.nextInt(1, 7) }
+                animatedComputerDice = List(5) { Random.nextInt(1, 7) }
+                delay(100L)
+            }
+            isFirstThrow = false
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .background(Color.White)
     ) {
         Box(
             modifier = Modifier
@@ -38,21 +57,30 @@ fun GameScreen(navController: NavController, mode: String) {
                 .padding(8.dp)
                 .shadow(4.dp, shape = RoundedCornerShape(8.dp))
                 .background(Color(0xFF04056C), shape = RoundedCornerShape(8.dp))
-                .padding(8.dp)
-        ){
-            Column {
-                Text("H: $humanScore / C: $computerScore", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
+                .padding(12.dp)
+        ) {
+            Text(
+                text = "H: $humanScore / C: $computerScore",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
 
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 10.dp)
+                .padding(8.dp)
+                .shadow(4.dp, shape = RoundedCornerShape(8.dp))
                 .background(Color(0xFFDD2C00), shape = RoundedCornerShape(8.dp))
-                .padding(horizontal = 24.dp, vertical = 8.dp)
+                .padding(12.dp)
         ) {
-            Text("Target: ${viewModel.targetScore}", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Target: ${viewModel.targetScore}",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
 
         Column(
@@ -62,11 +90,18 @@ fun GameScreen(navController: NavController, mode: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Mode: ${if (mode == "hard") "Hard Mode" else "Easy Mode"}", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(24.dp))
-            DiceRow(humanDice, selectedDice, viewModel::toggleDiceSelection)
+            DiceRow(
+                if (showResetDice) List(5) { 1 } else if (isFirstThrow) animatedHumanDice else humanDice,
+                selectedDice,
+                viewModel::toggleDiceSelection
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            DiceRow(computerDice, List(5) { false }, null)
+
+            DiceRow(
+                if (showResetDice) List(5) { 1 } else if (isFirstThrow) animatedComputerDice else computerDice,
+                List(5) { false },
+                null
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -76,10 +111,14 @@ fun GameScreen(navController: NavController, mode: String) {
             ) {
                 Button(
                     onClick = {
-                        if (!hasThrown) viewModel.throwDice()
-                        else viewModel.rerollSelectedDice()
+                        if (!hasThrown) {
+                            isFirstThrow = true
+                            viewModel.throwDice()
+                        } else {
+                            viewModel.rerollSelectedDice()
+                        }
                     },
-                    enabled = !hasThrown || rerollCount < 2,
+                    enabled = !showResetDice && (!hasThrown || rerollCount < 2),
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 8.dp),
@@ -88,9 +127,15 @@ fun GameScreen(navController: NavController, mode: String) {
                 ) {
                     Text(if (!hasThrown) "Throw" else "Reroll (${2 - rerollCount})", color = Color.White)
                 }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
                 Button(
-                    onClick = { viewModel.scoreTurn() },
-                    enabled = hasThrown,
+                    onClick = {
+                        viewModel.scoreTurn()
+                        showResetDice = true
+                    },
+                    enabled = hasThrown && !showResetDice,
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 8.dp),
@@ -99,6 +144,13 @@ fun GameScreen(navController: NavController, mode: String) {
                 ) {
                     Text("Score", color = Color.White)
                 }
+            }
+        }
+
+        if (showResetDice) {
+            LaunchedEffect(Unit) {
+                delay(2000L)
+                showResetDice = false
             }
         }
 
