@@ -11,21 +11,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.rollthedice.viewmodel.DiceGameViewModel
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.delay
 import kotlin.random.Random
+import com.example.rollthedice.viewmodel.DiceGameViewModel
 
 @Composable
 fun GameScreen(navController: NavController, mode: String) {
     val viewModel = remember { DiceGameViewModel(mode) }
-    var showResetDice by remember { mutableStateOf(false) }
-    var animatedHumanDice by remember { mutableStateOf(List(5) { Random.nextInt(1, 7) }) }
-    var animatedComputerDice by remember { mutableStateOf(List(5) { Random.nextInt(1, 7) }) }
-    var isFirstThrow by remember { mutableStateOf(true) }
-
     val humanDice by viewModel.humanDice.collectAsState()
     val computerDice by viewModel.computerDice.collectAsState()
     val humanScore by viewModel.humanScore.collectAsState()
@@ -34,14 +28,19 @@ fun GameScreen(navController: NavController, mode: String) {
     val rerollCount by viewModel.rerollCount.collectAsState()
     val selectedDice by viewModel.selectedDice.collectAsState()
 
-    LaunchedEffect(isFirstThrow) {
-        if (isFirstThrow) {
+    var isRolling by remember { mutableStateOf(false) }
+    var rollingHumanDice by remember { mutableStateOf(humanDice) }
+
+    LaunchedEffect(isRolling) {
+        if (isRolling) {
             repeat(10) {
-                animatedHumanDice = List(5) { Random.nextInt(1, 7) }
-                animatedComputerDice = List(5) { Random.nextInt(1, 7) }
+                rollingHumanDice = humanDice.mapIndexed { index, value ->
+                    if (selectedDice[index]) value else Random.nextInt(1, 7)
+                }
                 delay(100L)
             }
-            isFirstThrow = false
+            rollingHumanDice = humanDice
+            isRolling = false
         }
     }
 
@@ -91,17 +90,13 @@ fun GameScreen(navController: NavController, mode: String) {
             verticalArrangement = Arrangement.Center
         ) {
             DiceRow(
-                if (showResetDice) List(5) { 1 } else if (isFirstThrow) animatedHumanDice else humanDice,
+                if (isRolling) rollingHumanDice else humanDice,
                 selectedDice,
                 viewModel::toggleDiceSelection
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            DiceRow(
-                if (showResetDice) List(5) { 1 } else if (isFirstThrow) animatedComputerDice else computerDice,
-                List(5) { false },
-                null
-            )
+            DiceRow(computerDice, List(5) { false }, null)
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -112,13 +107,14 @@ fun GameScreen(navController: NavController, mode: String) {
                 Button(
                     onClick = {
                         if (!hasThrown) {
-                            isFirstThrow = true
+                            isRolling = true
                             viewModel.throwDice()
-                        } else {
+                        } else if (rerollCount < 2) {
+                            isRolling = true
                             viewModel.rerollSelectedDice()
                         }
                     },
-                    enabled = !showResetDice && (!hasThrown || rerollCount < 2),
+                    enabled = !isRolling && (!hasThrown || rerollCount < 2),
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 8.dp),
@@ -131,11 +127,8 @@ fun GameScreen(navController: NavController, mode: String) {
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Button(
-                    onClick = {
-                        viewModel.scoreTurn()
-                        showResetDice = true
-                    },
-                    enabled = hasThrown && !showResetDice,
+                    onClick = { viewModel.scoreTurn() },
+                    enabled = hasThrown && !isRolling,
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 8.dp),
@@ -144,13 +137,6 @@ fun GameScreen(navController: NavController, mode: String) {
                 ) {
                     Text("Score", color = Color.White)
                 }
-            }
-        }
-
-        if (showResetDice) {
-            LaunchedEffect(Unit) {
-                delay(2000L)
-                showResetDice = false
             }
         }
 

@@ -1,11 +1,15 @@
 package com.example.rollthedice.viewmodel
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-class DiceGameViewModel(private val mode: String) : ViewModel() { // ✅ Mode is passed once
+class DiceGameViewModel(private val mode: String) : ViewModel() {
     private val _humanDice = MutableStateFlow(List(5) { 1 })
     val humanDice = _humanDice.asStateFlow()
 
@@ -50,7 +54,10 @@ class DiceGameViewModel(private val mode: String) : ViewModel() { // ✅ Mode is
             _rerollCount.value++
 
             if (_rerollCount.value >= 2) {
-                scoreTurn()
+                viewModelScope.launch {
+                    delay(2000L)
+                    scoreTurn()
+                }
             }
         }
     }
@@ -91,5 +98,3 @@ class DiceGameViewModel(private val mode: String) : ViewModel() { // ✅ Mode is
         _rerollCount.value = 0
     }
 }
-
-
