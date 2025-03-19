@@ -19,8 +19,8 @@ import kotlin.random.Random
 
 @Composable
 fun GameScreen(navController: NavController, mode: String) {
-    var humanDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }  // Start with all 1s
-    var computerDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }
+    var humanDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }  // Start with 11111
+    var computerDice by rememberSaveable { mutableStateOf(List(5) { 1 }) } // Start with 11111
     var humanScore by rememberSaveable { mutableStateOf(0) }
     var computerScore by rememberSaveable { mutableStateOf(0) }
     var hasThrown by rememberSaveable { mutableStateOf(false) }
@@ -28,9 +28,28 @@ fun GameScreen(navController: NavController, mode: String) {
     var selectedDice by rememberSaveable { mutableStateOf(List(5) { false }) }
 
     val targetScore = 101
-
     var isRolling by remember { mutableStateOf(false) }
     var rollingHumanDice by remember { mutableStateOf(humanDice) }
+
+    // 🎯 Auto-score when rerollCount reaches 2
+    LaunchedEffect(rerollCount) {
+        if (hasThrown && rerollCount >= 2) {
+            delay(2000L) // Wait for 2 seconds before scoring
+
+            // Update score
+            humanScore += humanDice.sum()
+            computerScore += computerDice.sum()
+
+            // Reset game state
+            hasThrown = false
+            rerollCount = 0
+            selectedDice = List(5) { false }
+
+            // Reset dice back to 11111
+            humanDice = List(5) { 1 }
+            computerDice = List(5) { 1 }
+        }
+    }
 
     LaunchedEffect(isRolling) {
         if (isRolling) {
@@ -46,7 +65,7 @@ fun GameScreen(navController: NavController, mode: String) {
     }
 
     fun throwDice() {
-        humanDice = List(5) { 1 }  // Reset all dice to 1
+        humanDice = List(5) { Random.nextInt(1, 7) }
         computerDice = List(5) { Random.nextInt(1, 7) }
         hasThrown = true
         rerollCount = 0
@@ -62,8 +81,15 @@ fun GameScreen(navController: NavController, mode: String) {
     fun scoreTurn() {
         humanScore += humanDice.sum()
         computerScore += computerDice.sum()
+
+        // Reset game state
         hasThrown = false
+        rerollCount = 0
         selectedDice = List(5) { false }
+
+        // Reset dice back to 11111
+        humanDice = List(5) { 1 }
+        computerDice = List(5) { 1 }
     }
 
     fun toggleDiceSelection(index: Int) {
@@ -122,7 +148,7 @@ fun GameScreen(navController: NavController, mode: String) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            DiceRow(computerDice, List(5) { false }, null)
+            DiceRow(computerDice, List(5) { false }, null) // Computer dice remains static after first roll
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -153,7 +179,11 @@ fun GameScreen(navController: NavController, mode: String) {
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Button(
-                    onClick = { scoreTurn() },
+                    onClick = {
+                        if (hasThrown && rerollCount <= 2) {
+                            scoreTurn() // Player can score even before rerolling
+                        }
+                    },
                     enabled = hasThrown && !isRolling,
                     modifier = Modifier
                         .weight(1f)
