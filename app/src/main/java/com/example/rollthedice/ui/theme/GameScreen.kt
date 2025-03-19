@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -15,18 +16,18 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.delay
 import kotlin.random.Random
-import com.example.rollthedice.viewmodel.DiceGameViewModel
 
 @Composable
 fun GameScreen(navController: NavController, mode: String) {
-    val viewModel = remember { DiceGameViewModel(mode) }
-    val humanDice by viewModel.humanDice.collectAsState()
-    val computerDice by viewModel.computerDice.collectAsState()
-    val humanScore by viewModel.humanScore.collectAsState()
-    val computerScore by viewModel.computerScore.collectAsState()
-    val hasThrown by viewModel.hasThrown.collectAsState()
-    val rerollCount by viewModel.rerollCount.collectAsState()
-    val selectedDice by viewModel.selectedDice.collectAsState()
+    var humanDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }  // Start with all 1s
+    var computerDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }
+    var humanScore by rememberSaveable { mutableStateOf(0) }
+    var computerScore by rememberSaveable { mutableStateOf(0) }
+    var hasThrown by rememberSaveable { mutableStateOf(false) }
+    var rerollCount by rememberSaveable { mutableStateOf(0) }
+    var selectedDice by rememberSaveable { mutableStateOf(List(5) { false }) }
+
+    val targetScore = 101
 
     var isRolling by remember { mutableStateOf(false) }
     var rollingHumanDice by remember { mutableStateOf(humanDice) }
@@ -42,6 +43,31 @@ fun GameScreen(navController: NavController, mode: String) {
             rollingHumanDice = humanDice
             isRolling = false
         }
+    }
+
+    fun throwDice() {
+        humanDice = List(5) { 1 }  // Reset all dice to 1
+        computerDice = List(5) { Random.nextInt(1, 7) }
+        hasThrown = true
+        rerollCount = 0
+    }
+
+    fun rerollSelectedDice() {
+        humanDice = humanDice.mapIndexed { index, value ->
+            if (selectedDice[index]) value else Random.nextInt(1, 7) // Only change unselected dice
+        }
+        rerollCount++
+    }
+
+    fun scoreTurn() {
+        humanScore += humanDice.sum()
+        computerScore += computerDice.sum()
+        hasThrown = false
+        selectedDice = List(5) { false }
+    }
+
+    fun toggleDiceSelection(index: Int) {
+        selectedDice = selectedDice.toMutableList().also { it[index] = !it[index] }
     }
 
     Box(
@@ -75,7 +101,7 @@ fun GameScreen(navController: NavController, mode: String) {
                 .padding(12.dp)
         ) {
             Text(
-                text = "Target: ${viewModel.targetScore}",
+                text = "Target: $targetScore",
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
@@ -92,7 +118,7 @@ fun GameScreen(navController: NavController, mode: String) {
             DiceRow(
                 if (isRolling) rollingHumanDice else humanDice,
                 selectedDice,
-                viewModel::toggleDiceSelection
+                ::toggleDiceSelection
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -108,10 +134,10 @@ fun GameScreen(navController: NavController, mode: String) {
                     onClick = {
                         if (!hasThrown) {
                             isRolling = true
-                            viewModel.throwDice()
+                            throwDice()
                         } else if (rerollCount < 2) {
                             isRolling = true
-                            viewModel.rerollSelectedDice()
+                            rerollSelectedDice()
                         }
                     },
                     enabled = !isRolling && (!hasThrown || rerollCount < 2),
@@ -127,7 +153,7 @@ fun GameScreen(navController: NavController, mode: String) {
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Button(
-                    onClick = { viewModel.scoreTurn() },
+                    onClick = { scoreTurn() },
                     enabled = hasThrown && !isRolling,
                     modifier = Modifier
                         .weight(1f)
@@ -140,7 +166,7 @@ fun GameScreen(navController: NavController, mode: String) {
             }
         }
 
-        if (humanScore >= viewModel.targetScore || computerScore >= viewModel.targetScore) {
+        if (humanScore >= targetScore || computerScore >= targetScore) {
             WinnerPopup(
                 humanScore, computerScore,
                 onDismiss = { navController.navigate("main_menu") }
