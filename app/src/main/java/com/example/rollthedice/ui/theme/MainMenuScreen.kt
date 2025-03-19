@@ -65,8 +65,8 @@ fun MainMenuScreen(navController: NavController) {
 
     if (showModeDialog) {
         ModeSelectionDialog(
-            onModeSelected = { mode ->
-                navController.navigate("game/$mode")
+            onModeSelected = { mode, targetScore ->
+                navController.navigate("game/$mode/$targetScore")
                 showModeDialog = false
             },
             onDismiss = { showModeDialog = false }

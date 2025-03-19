@@ -18,7 +18,7 @@ import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 @Composable
-fun GameScreen(navController: NavController, mode: String) {
+fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
     var humanDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }  // Start with 11111
     var computerDice by rememberSaveable { mutableStateOf(List(5) { 1 }) } // Start with 11111
     var humanScore by rememberSaveable { mutableStateOf(0) }
@@ -27,7 +27,6 @@ fun GameScreen(navController: NavController, mode: String) {
     var rerollCount by rememberSaveable { mutableStateOf(0) }
     var selectedDice by rememberSaveable { mutableStateOf(List(5) { false }) }
 
-    val targetScore = 101
     var isRolling by remember { mutableStateOf(false) }
     var rollingHumanDice by remember { mutableStateOf(humanDice) }
 

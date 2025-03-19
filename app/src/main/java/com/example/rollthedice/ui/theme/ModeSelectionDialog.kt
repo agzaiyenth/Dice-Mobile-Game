@@ -1,54 +1,86 @@
 package com.example.rollthedice.ui.theme
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ModeSelectionDialog(onModeSelected: (String) -> Unit, onDismiss: () -> Unit) {
+fun ModeSelectionDialog(onModeSelected: (String, Int) -> Unit, onDismiss: () -> Unit) {
+    var selectedMode by remember { mutableStateOf("easy") } // Default mode
+    var targetScore by remember { mutableStateOf(TextFieldValue("101")) } // Default target score
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Difficulty Mode") },
+        title = { Text("Select Mode & Target Score") },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally, // Align buttons center
-                verticalArrangement = Arrangement.spacedBy(12.dp) // Add spacing between buttons
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("Choose your game mode:", color = Color.Black)
-                Button(
-                    onClick = { onModeSelected("easy") },
-                    modifier = Modifier.fillMaxWidth(0.7f), // Ensures uniform button size
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF04056C))
+
+                // Mode Selection
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Text("Easy Mode", color = Color.White)
+                    Button(
+                        onClick = { selectedMode = "easy" },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedMode == "easy") Color(0xFF04056C) else Color.Gray
+                        )
+                    ) {
+                        Text("Easy", color = Color.White)
+                    }
+                    Button(
+                        onClick = { selectedMode = "hard" },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedMode == "hard") Color(0xFF04056C) else Color.Gray
+                        )
+                    ) {
+                        Text("Hard", color = Color.White)
+                    }
                 }
-                Button(
-                    onClick = { onModeSelected("hard") },
-                    modifier = Modifier.fillMaxWidth(0.7f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF04056C))
-                ) {
-                    Text("Hard Mode", color = Color.White)
-                }
+
+                // Target Score Input
+                Text("Enter Target Score:", color = Color.Black)
+                OutlinedTextField(
+                    value = targetScore,
+                    onValueChange = { newValue ->
+                        if (newValue.text.all { it.isDigit() }) { // Only allow numbers
+                            targetScore = newValue
+                        }
+                    },
+                    singleLine = true
+                )
             }
         },
-        confirmButton = {},
-        dismissButton = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+        confirmButton = {
+            Button(
+                onClick = {
+                    val score = targetScore.text.toIntOrNull() ?: 101
+                    if (score > 1) { // Ensure valid score
+                        onModeSelected(selectedMode, score)
+                        onDismiss()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF04056C))
             ) {
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(0.7f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF04056C))
-                ) {
-                    Text("Cancel", color = Color.White)
-                }
+                Text("Start Game", color = Color.White)
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+            ) {
+                Text("Cancel", color = Color.White)
             }
         }
     )

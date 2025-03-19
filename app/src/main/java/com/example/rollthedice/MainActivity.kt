@@ -16,13 +16,13 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             NavHost(navController, startDestination = "main_menu") {
                 composable("main_menu") { MainMenuScreen(navController) }
-                composable("game/{mode}") { backStackEntry ->
+                composable("game/{mode}/{targetScore}") { backStackEntry ->
                     val mode = backStackEntry.arguments?.getString("mode") ?: "easy"
-                    GameScreen(navController, mode)
+                    val targetScore = backStackEntry.arguments?.getString("targetScore")?.toIntOrNull() ?: 101
+                    GameScreen(navController, mode, targetScore)
                 }
             }
         }
     }
 }
-
 
