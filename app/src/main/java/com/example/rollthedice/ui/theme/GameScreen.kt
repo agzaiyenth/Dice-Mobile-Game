@@ -221,12 +221,14 @@ fun GameScreen(activity: Activity, mode: String, targetScore: Int){
 
         if (humanScore >= targetScore || computerScore >= targetScore) {
             WinnerPopup(
-                humanScore, computerScore,
+                humanScore = humanScore,
+                computerScore = computerScore,
+                targetScore = targetScore,
                 onDismiss = {
                     activity.finish()
                 }
-
             )
+
         }
     }
 }

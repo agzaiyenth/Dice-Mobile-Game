@@ -6,16 +6,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun WinnerPopup(humanScore: Int, computerScore: Int, onDismiss: () -> Unit) {
+fun WinnerPopup(humanScore: Int, computerScore: Int, targetScore: Int, onDismiss: () -> Unit) {
     val winnerText = when {
-        humanScore >= 101 && computerScore < 101 -> " You Win!"
-        computerScore >= 101 && humanScore < 101 -> " You Lose!"
-        else -> "It's a Tie! 🎲"
+        humanScore >= targetScore && computerScore < targetScore -> "You Win!"
+        computerScore >= targetScore && humanScore < targetScore -> "You Lose!"
+        else -> "It's a Tie!"
     }
 
     val winnerColor = when {
-        humanScore >= 101 && computerScore < 101 -> Color.Green
-        computerScore >= 101 && humanScore < 101 -> Color.Red
+        humanScore >= targetScore && computerScore < targetScore -> Color.Green
+        computerScore >= targetScore && humanScore < targetScore -> Color.Red
         else -> Color.Blue
     }
 
@@ -29,3 +29,4 @@ fun WinnerPopup(humanScore: Int, computerScore: Int, onDismiss: () -> Unit) {
         }
     )
 }
+
