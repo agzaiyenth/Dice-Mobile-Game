@@ -3,7 +3,6 @@ package com.example.rollthedice.ui.theme
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -16,11 +15,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import android.app.Activity
+import android.content.Intent
 import kotlin.random.Random
 
 @Composable
-fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
+fun GameScreen(activity: Activity, mode: String, targetScore: Int){
 
     var humanDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }
     var computerDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }
@@ -222,7 +222,10 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
         if (humanScore >= targetScore || computerScore >= targetScore) {
             WinnerPopup(
                 humanScore, computerScore,
-                onDismiss = { navController.navigate("main_menu") }
+                onDismiss = {
+                    activity.finish()
+                }
+
             )
         }
     }
