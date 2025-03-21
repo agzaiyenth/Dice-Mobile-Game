@@ -8,8 +8,8 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun WinnerPopup(humanScore: Int, computerScore: Int, onDismiss: () -> Unit) {
     val winnerText = when {
-        humanScore >= 101 && computerScore < 101 -> "🎉 You Win!"
-        computerScore >= 101 && humanScore < 101 -> "😢 You Lose!"
+        humanScore >= 101 && computerScore < 101 -> " You Win!"
+        computerScore >= 101 && humanScore < 101 -> " You Lose!"
         else -> "It's a Tie! 🎲"
     }
 

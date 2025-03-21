@@ -19,6 +19,7 @@ import kotlin.random.Random
 
 @Composable
 fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
+
     var humanDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }
     var computerDice by rememberSaveable { mutableStateOf(List(5) { 1 }) }
     var humanScore by rememberSaveable { mutableStateOf(0) }
@@ -33,20 +34,35 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
     var isComputerRolling by remember { mutableStateOf(false) }
     var rollingComputerDice by remember { mutableStateOf(computerDice) }
 
-    LaunchedEffect(rerollCount) {
-        if (hasThrown && rerollCount >= 2) {
-            delay(2000L)
-            humanScore += humanDice.sum()
-            computerScore += computerDice.sum()
-            hasThrown = false
-            rerollCount = 0
-            selectedDice = List(5) { false }
-            humanDice = List(5) { 1 }
-            computerDice = List(5) { 1 }
+    fun easyModeStrategy(): List<Int> = List(5) { Random.nextInt(1, 7) }
+
+    fun hardModeStrategy(): List<Int> {
+        val shouldPlaySmart = Random.nextBoolean()
+        return if (shouldPlaySmart) {
+            computerDice.map { if (it < 4) Random.nextInt(4, 7) else it }
+        } else {
+            List(5) { Random.nextInt(1, 7) }
         }
     }
 
-    // Human rolling effect
+    fun scoreTurn() {
+        humanScore += humanDice.sum()
+        computerScore += computerDice.sum()
+        hasThrown = false
+        rerollCount = 0
+        selectedDice = List(5) { false }
+        humanDice = List(5) { 1 }
+        computerDice = List(5) { 1 }
+    }
+
+
+    LaunchedEffect(rerollCount) {
+        if (hasThrown && rerollCount >= 2) {
+            delay(2000L)
+            scoreTurn()
+        }
+    }
+
     LaunchedEffect(isRolling) {
         if (isRolling) {
             repeat(10) {
@@ -73,9 +89,9 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
 
     fun throwDice() {
         isRolling = true
-        isComputerRolling = true // Start rolling effect for the computer
+        isComputerRolling = true
         humanDice = List(5) { Random.nextInt(1, 7) }
-        computerDice = List(5) { Random.nextInt(1, 7) }
+        computerDice = if (mode == "hard") hardModeStrategy() else easyModeStrategy()
         hasThrown = true
         rerollCount = 0
     }
@@ -86,16 +102,6 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
             if (selectedDice[index]) value else Random.nextInt(1, 7)
         }
         rerollCount++
-    }
-
-    fun scoreTurn() {
-        humanScore += humanDice.sum()
-        computerScore += computerDice.sum()
-        hasThrown = false
-        rerollCount = 0
-        selectedDice = List(5) { false }
-        humanDice = List(5) { 1 }
-        computerDice = List(5) { 1 }
     }
 
     fun toggleDiceSelection(index: Int) {
