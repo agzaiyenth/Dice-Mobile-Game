@@ -1,20 +1,22 @@
 package com.example.rollthedice.ui.theme
 
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.Alignment
-import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 @Composable
@@ -33,6 +35,8 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
 
     var isComputerRolling by remember { mutableStateOf(false) }
     var rollingComputerDice by remember { mutableStateOf(computerDice) }
+
+    val handler = Handler(Looper.getMainLooper())
 
     fun easyModeStrategy(): List<Int> = List(5) { Random.nextInt(1, 7) }
 
@@ -55,36 +59,34 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
         computerDice = List(5) { 1 }
     }
 
-
-    LaunchedEffect(rerollCount) {
-        if (hasThrown && rerollCount >= 2) {
-            delay(2000L)
-            scoreTurn()
-        }
+    fun toggleDiceSelection(index: Int) {
+        selectedDice = selectedDice.toMutableList().also { it[index] = !it[index] }
     }
 
-    LaunchedEffect(isRolling) {
-        if (isRolling) {
-            repeat(10) {
-                rollingHumanDice = humanDice.mapIndexed { index, value ->
-                    if (selectedDice[index]) value else Random.nextInt(1, 7)
-                }
-                delay(100L)
-            }
+    fun animateHumanDice(times: Int = 10, delayMillis: Long = 100L, onEnd: () -> Unit) {
+        if (times == 0) {
             rollingHumanDice = humanDice
-            isRolling = false
+            onEnd()
+            return
         }
+        rollingHumanDice = humanDice.mapIndexed { index, value ->
+            if (selectedDice[index]) value else Random.nextInt(1, 7)
+        }
+        handler.postDelayed({
+            animateHumanDice(times - 1, delayMillis, onEnd)
+        }, delayMillis)
     }
 
-    LaunchedEffect(isComputerRolling) {
-        if (isComputerRolling) {
-            repeat(10) {
-                rollingComputerDice = List(5) { Random.nextInt(1, 7) }
-                delay(100L)
-            }
+    fun animateComputerDice(times: Int = 10, delayMillis: Long = 100L, onEnd: () -> Unit) {
+        if (times == 0) {
             rollingComputerDice = computerDice
-            isComputerRolling = false
+            onEnd()
+            return
         }
+        rollingComputerDice = List(5) { Random.nextInt(1, 7) }
+        handler.postDelayed({
+            animateComputerDice(times - 1, delayMillis, onEnd)
+        }, delayMillis)
     }
 
     fun throwDice() {
@@ -94,6 +96,9 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
         computerDice = if (mode == "hard") hardModeStrategy() else easyModeStrategy()
         hasThrown = true
         rerollCount = 0
+
+        animateHumanDice(onEnd = { isRolling = false })
+        animateComputerDice(onEnd = { isComputerRolling = false })
     }
 
     fun rerollSelectedDice() {
@@ -102,10 +107,14 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
             if (selectedDice[index]) value else Random.nextInt(1, 7)
         }
         rerollCount++
-    }
-
-    fun toggleDiceSelection(index: Int) {
-        selectedDice = selectedDice.toMutableList().also { it[index] = !it[index] }
+        animateHumanDice(onEnd = {
+            isRolling = false
+            if (rerollCount >= 2) {
+                handler.postDelayed({
+                    scoreTurn()
+                }, 2000)
+            }
+        })
     }
 
     Box(
@@ -153,7 +162,6 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Human dice row (shows rolling effect if rolling)
             DiceRow(
                 if (isRolling) rollingHumanDice else humanDice,
                 selectedDice,
@@ -161,7 +169,6 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Computer dice row (ONLY rolls when throwDice() is called)
             DiceRow(
                 if (isComputerRolling) rollingComputerDice else computerDice,
                 List(5) { false },
@@ -177,9 +184,9 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
                 Button(
                     onClick = {
                         if (!hasThrown) {
-                            throwDice() // Both human and computer throw
+                            throwDice()
                         } else if (rerollCount < 2) {
-                            rerollSelectedDice() // Only human rerolls
+                            rerollSelectedDice()
                         }
                     },
                     enabled = !isRolling && (!hasThrown || rerollCount < 2),
@@ -197,7 +204,7 @@ fun GameScreen(navController: NavController, mode: String, targetScore: Int) {
                 Button(
                     onClick = {
                         if (hasThrown && rerollCount <= 2) {
-                            scoreTurn() // Player can score even before rerolling
+                            scoreTurn()
                         }
                     },
                     enabled = hasThrown && !isRolling,
