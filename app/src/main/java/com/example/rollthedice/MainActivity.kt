@@ -18,7 +18,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
 import com.example.rollthedice.ui.theme.ModeSelectionDialog
 import com.example.rollthedice.ui.theme.showAboutDialog
-import com.example.rollthedice.R
+
+/**
+ * AGZAIYENTH GANARAJ - 20230746 w2051756
+ * I confirm that I understand what plagiarism is and have read and understood the
+ * section on Assessment Offences in the Essential Information for Students. The work
+ * that I have submitted is entirely my own. Any work from other authors is duly
+ * referenced and acknowledge
+ */
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

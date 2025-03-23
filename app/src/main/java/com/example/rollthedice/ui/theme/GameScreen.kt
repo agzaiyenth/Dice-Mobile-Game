@@ -228,7 +228,7 @@ fun GameScreen(activity: Activity, mode: String, targetScore: Int){
                 ::toggleDiceSelection
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Human Dice", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text("Computer Dice", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             DiceRow(
                 if (isComputerRolling) rollingComputerDice else computerDice,
                 List(5) { false },

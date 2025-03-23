@@ -1,7 +1,6 @@
 package com.example.rollthedice.ui.theme
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -48,7 +47,6 @@ fun ModeSelectionDialog(onModeSelected: (String, Int) -> Unit, onDismiss: () -> 
                     }
                 }
 
-                // Target Score Input
                 Text("Enter Target Score:", color = Color.Black)
                 OutlinedTextField(
                     value = targetScore,
@@ -65,7 +63,7 @@ fun ModeSelectionDialog(onModeSelected: (String, Int) -> Unit, onDismiss: () -> 
             Button(
                 onClick = {
                     val score = targetScore.text.toIntOrNull() ?: 101
-                    if (score > 1) { // Ensure valid score
+                    if (score > 1) {
                         onModeSelected(selectedMode, score)
                         onDismiss()
                     }

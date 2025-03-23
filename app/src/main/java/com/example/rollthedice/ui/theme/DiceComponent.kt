@@ -40,8 +40,6 @@ fun DiceImage(value: Int, isSelected: Boolean, onClick: (() -> Unit)?) {
     }
 }
 
-
-
 fun diceDrawable(value: Int): Int {
     return when (value) {
         1 -> R.drawable.dice_1
