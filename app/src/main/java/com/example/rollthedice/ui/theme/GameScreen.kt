@@ -64,13 +64,12 @@ fun GameScreen(activity: Activity, mode: String, targetScore: Int){
     var hasThrown by rememberSaveable { mutableStateOf(false) }
     var rerollCount by rememberSaveable { mutableStateOf(0) }
     var selectedDice by rememberSaveable { mutableStateOf(List(5) { false }) }
-
+    var winner by rememberSaveable { mutableStateOf<String?>(null) }
+    var gameOver by rememberSaveable { mutableStateOf(false) }
     var isRolling by remember { mutableStateOf(false) }
     var rollingHumanDice by remember { mutableStateOf(humanDice) }
-
     var isComputerRolling by remember { mutableStateOf(false) }
     var rollingComputerDice by remember { mutableStateOf(computerDice) }
-
     val handler = Handler(Looper.getMainLooper())
 
     fun easyModeStrategy(): List<Int> = List(5) { Random.nextInt(1, 7) }
@@ -87,11 +86,36 @@ fun GameScreen(activity: Activity, mode: String, targetScore: Int){
     fun scoreTurn() {
         humanScore += humanDice.sum()
         computerScore += computerDice.sum()
-        hasThrown = false
-        rerollCount = 0
-        selectedDice = List(5) { false }
-        humanDice = List(5) { 1 }
-        computerDice = List(5) { 1 }
+
+        if (humanScore >= targetScore || computerScore >= targetScore) {
+            when {
+                humanScore >= targetScore && computerScore >= targetScore -> {
+                    if (humanScore > computerScore) {
+                        winner = "Human"
+                        gameOver = true
+                    } else if (computerScore > humanScore) {
+                        winner = "Computer"
+                        gameOver = true
+                    }
+                    // If both scores are equal → tie → play another round
+                }
+                humanScore >= targetScore -> {
+                    winner = "Human"
+                    gameOver = true
+                }
+                computerScore >= targetScore -> {
+                    winner = "Computer"
+                    gameOver = true
+                }
+            }
+        }
+        if (!gameOver) {
+            hasThrown = false
+            rerollCount = 0
+            selectedDice = List(5) { false }
+            humanDice = List(5) { 1 }
+            computerDice = List(5) { 1 }
+        }
     }
 
     fun toggleDiceSelection(index: Int) {
@@ -255,16 +279,13 @@ fun GameScreen(activity: Activity, mode: String, targetScore: Int){
             }
         }
 
-        if (humanScore >= targetScore || computerScore >= targetScore) {
+        if (gameOver && winner != null) {
             WinnerPopup(
-                humanScore = humanScore,
-                computerScore = computerScore,
-                targetScore = targetScore,
+                winner = winner,
                 onDismiss = {
                     activity.finish()
                 }
             )
-
         }
     }
 }
