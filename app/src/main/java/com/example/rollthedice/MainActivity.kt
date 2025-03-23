@@ -25,6 +25,9 @@ import com.example.rollthedice.ui.theme.showAboutDialog
  * section on Assessment Offences in the Essential Information for Students. The work
  * that I have submitted is entirely my own. Any work from other authors is duly
  * referenced and acknowledge
+ *
+ * Youtube Video Link - https://youtu.be/W23ozVJX5Bo
+ *
  */
 
 
