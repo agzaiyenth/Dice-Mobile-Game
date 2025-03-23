@@ -49,16 +49,18 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            Box(
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black)
             ) {
+                val isPortrait = maxHeight > maxWidth
+
                 Image(
                     painter = painterResource(id = R.drawable.background),
                     contentDescription = "Background Image",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillHeight
+                    contentScale = if (isPortrait) ContentScale.FillHeight else ContentScale.Crop
                 )
 
                 Column(
@@ -88,7 +90,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-
             if (showAboutDialog) {
                 showAboutDialog {
                     showAboutDialog = false
@@ -97,3 +98,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
