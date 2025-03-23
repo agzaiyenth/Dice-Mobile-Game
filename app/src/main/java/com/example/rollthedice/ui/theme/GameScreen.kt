@@ -16,8 +16,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.app.Activity
-import android.content.Intent
 import kotlin.random.Random
+
+/**
+ * -------------------------------
+ * Computer Player Strategy: Current Version
+ * -------------------------------
+ *
+ * Strategy Description:
+ * - The computer's behavior in hard mode is partially randomized.
+ * - It randomly decides whether to play smart or randomly on each turn using:
+ *     val shouldPlaySmart = Random.nextBoolean()
+ *
+ * If shouldPlaySmart is TRUE:
+ * - The computer follows a simple heuristic:
+ *     - For each die value:
+ *         - If the die is less than 4 (i.e., 1, 2, or 3), it is rerolled with a random value from 4 to 6.
+ *         - If the die is 4, 5, or 6, it is kept.
+ *     - This aims to increase the chances of higher total values in a round.
+ *
+ * If shouldPlaySmart is FALSE:
+ * - The computer simply rolls all 5 dice randomly, simulating a non-strategic move.
+ *
+ * Advantages:
+ * - Slightly better than full random rolling, especially when smart play is chosen.
+ * - Easy to implement and adds variety through randomness.
+ *
+ * Disadvantages:
+ * - The decision to play smart is left to chance, which leads to inconsistency.
+ * - Only applies logic at the first roll — no reroll strategy is implemented for the computer player.
+ * - Doesn’t adapt based on the current score gap, target score, or game pressure.
+ * - Can lead to frequent ties or losses, especially against a human player using rerolls.
+ *
+ * Summary:
+ * - This is a basic hybrid strategy using randomness and limited logic.
+ * - To improve performance, it needs reroll rounds and score-aware adaptations.
+ */
+
 
 @Composable
 fun GameScreen(activity: Activity, mode: String, targetScore: Int){
@@ -162,13 +197,14 @@ fun GameScreen(activity: Activity, mode: String, targetScore: Int){
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Text("Human Dice", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             DiceRow(
                 if (isRolling) rollingHumanDice else humanDice,
                 selectedDice,
                 ::toggleDiceSelection
             )
             Spacer(modifier = Modifier.height(16.dp))
-
+            Text("Human Dice", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             DiceRow(
                 if (isComputerRolling) rollingComputerDice else computerDice,
                 List(5) { false },
